@@ -34,7 +34,17 @@ cd trap_geom
 
 ## Quick Start
 
-Run the example simulations:
+### Interactive Tutorial
+
+For a step-by-step introduction, open the Jupyter notebook:
+
+```bash
+jupyter notebook example_usage.ipynb
+```
+
+### Example Scripts
+
+Run complete simulations from the command line:
 
 ```bash
 # Simulation with LAr gap
@@ -42,6 +52,9 @@ python examples/example_with_gap.py
 
 # Simulation without LAr gap
 python examples/example_no_gap.py
+
+# Physics validation suite
+python examples/physics_validation.py
 ```
 
 ## Project Structure
@@ -55,14 +68,19 @@ trap_geom/
 │   ├── simulation.py       # Monte Carlo ray tracer
 │   └── analysis.py         # Analysis and visualization tools
 │
-├── examples/               # Example scripts
+├── examples/                    # Example scripts
 │   ├── example_with_gap.py
-│   └── example_no_gap.py
+│   ├── example_no_gap.py
+│   └── physics_validation.py
+│
+├── example_usage.ipynb          # Interactive notebook tutorial
 │
 ├── photon_sim_analytic_gap_new.ipynb      # Original notebook (reference)
 ├── photon_sim_analytic_no_gap_new.ipynb   # Original notebook (reference)
 │
-└── README.md
+├── README.md                    # This file
+├── PHYSICS_VALIDATION.md        # Detailed validation results
+└── VALIDATION.md                # Validation summary
 ```
 
 ## Usage
@@ -358,198 +376,28 @@ The low raw efficiency is expected due to:
 
 The **solid angle corrected efficiency** (accounting for geometric acceptance) provides a more meaningful metric for detector performance: typically 0.4-19% depending on configuration.
 
-## Physics Validation & Model Assumptions
+## Physics Validation
 
-To ensure transparency and validate the physics implementation, we systematically test the impact of key assumptions and approximations. The plots below compare different configurations to demonstrate which effects are most important and where simplifications may be acceptable.
+The simulation has been systematically validated to verify physics implementation and understand model limitations. Key findings:
 
-### Gap Configuration Impact
+- ✅ **Geometric ray tracing** correctly implemented (AABB, refraction, TIR)
+- ✅ **Wavelength shifting** (Beer-Lambert) working as expected
+- ✅ **Dominant effect identified**: Solid angle (~6.4% geometric acceptance) is primary limitation
+- ✅ **Gap configuration**: Negligible optical impact (mechanical design choice)
+- ⚠️ **Model limitations** documented: No Fresnel reflections, simplified sensors, no scattering
 
-A primary design question: does the LAr gap between LC and WLS affect performance?
+**11 validation tests** were performed comparing:
+- Gap vs no-gap configurations
+- Dichroic ON/OFF/perfect
+- Wavelength shifting enabled/disabled
+- Quantum yield variations (perfect/realistic/poor)
+- Refractive index dispersion ON/OFF
 
-<div align="center">
-  <img src="docs/validation/gap_comparison.png" width="850" alt="Gap Comparison">
-</div>
+**Results**: Geometric acceptance dominates efficiency. Material properties (QY, dichroic, WLS) are secondary at this geometry scale.
 
-**Figure 5**: Comparison of detector with vs without 1mm LAr gap between light collection region and wavelength shifter.
+📊 **See detailed validation results**: [`PHYSICS_VALIDATION.md`](PHYSICS_VALIDATION.md)
 
-**Key Findings:**
-- **Detection efficiency** is nearly identical (~0.025%) with or without gap
-- **Reflection statistics** show minimal difference - gap doesn't significantly trap light
-- **Path lengths** for arrived photons are similar in both configurations
-- **Event distributions** show same dominant loss mechanism (bulk losses)
-
-**Conclusion**: The 1mm gap has **negligible impact** on detection efficiency. This validates that the gap can be included or excluded based on mechanical/thermal considerations without significantly affecting optical performance.
-
----
-
-### Physics Assumptions Summary
-
-How do key physics assumptions affect the results?
-
-<div align="center">
-  <img src="docs/validation/assumptions_summary.png" width="950" alt="Assumptions Summary">
-</div>
-
-**Figure 6**: Efficiency impact of enabling/disabling major physics effects.
-
-**Critical Findings:**
-
-1. **Dichroic Behavior** (Left Top):
-   - Dichroic ON vs OFF: ~0% difference
-   - **Interpretation**: At this geometry and low photon count, dichroic reflectance has minimal statistical impact
-   - **Caveat**: With higher statistics, dichroic *should* improve efficiency by reflecting 420nm back toward sensors
-
-2. **Wavelength Shifting** (Top Center):
-   - WLS enabled vs disabled: ~0% difference
-   - **Interpretation**: Nearly all photons are lost in bulk before reaching WLS
-   - **Key Point**: This reveals the **dominant loss mechanism** is geometric, not material
-
-3. **Quantum Yield** (Top Right):
-   - Perfect QY (1.0) vs Poor QY (0.7): ~0% observable difference
-   - **Interpretation**: QY matters, but not at this low efficiency regime
-   - **Expected**: Higher QY should show improvement with better geometry
-
-4. **Refractive Dispersion** (Bottom Left):
-   - Wavelength-dependent n vs constant n: minimal difference
-   - **Validation**: Dispersion is implemented correctly but not dominant effect
-   - **Justification**: Using wavelength-dependent n is physically accurate
-
-5. **Mirror Quality** (Bottom Center):
-   - Perfect mirror vs realistic dichroic: ~0% difference
-   - **Interpretation**: Mirror losses are not the bottleneck
-
-6. **Gap Presence** (Bottom Right):
-   - Confirms earlier finding: gap configuration doesn't matter
-
-**Overall Assessment**: The **geometric acceptance** (solid angle) dominates the efficiency. Material properties (QY, dichroic reflectance, WLS efficiency) become important only after geometric optimization.
-
----
-
-### Efficiency Ranking
-
-Which configuration performs best?
-
-<div align="center">
-  <img src="docs/validation/efficiency_ranking.png" width="850" alt="Efficiency Ranking">
-</div>
-
-**Figure 7**: Detection efficiency across all tested configurations, sorted by performance.
-
-**Observations:**
-- All configurations cluster around **0.025%** raw efficiency
-- Statistical variations are ~same order as efficiency itself
-- No configuration shows dramatic improvement
-
-**Physical Interpretation**:
-This confirms that with a **point source at 50 cm** and **1 cm² detector face**, the fundamental limitation is:
-1. **Solid angle**: Only ~6.4% of photons even head toward detector
-2. **Of those 6.4%**, multiple optical losses reduce arrival to ~0.4%
-3. **Net efficiency**: 0.025% = 6.4% × 0.4%
-
-To significantly improve efficiency, need to:
-- Increase detector area (larger solid angle)
-- Move source closer (larger solid angle)
-- Add reflective enclosure around source
-
----
-
-### Path Length Distributions
-
-How do physics assumptions affect photon propagation distances?
-
-<div align="center">
-  <img src="docs/validation/path_length_comparison.png" width="850" alt="Path Length Comparison">
-</div>
-
-**Figure 8**: Path length distributions for different physics assumptions.
-
-**Key Insights:**
-
-1. **Gap Configuration** (Top Left):
-   - Nearly identical distributions
-   - Confirms gap doesn't significantly alter optical paths
-
-2. **Dichroic Mirror** (Top Right):
-   - Similar distributions between ON/OFF
-   - With higher statistics, dichroic should show longer paths (more bounces)
-
-3. **Wavelength Shifting** (Bottom Left):
-   - WLS ON vs OFF shows similar distributions
-   - Indicates most photons don't reach WLS region (lost in bulk first)
-
-4. **Quantum Yield** (Bottom Right):
-   - Perfect vs poor QY show similar path lengths
-   - QY affects re-emission probability, not path geometry
-
----
-
-### Model Limitations & Validity
-
-Based on these validation studies, we can clearly state:
-
-#### ✅ **What the Model Does Well:**
-
-1. **Geometric ray tracing**: AABB intersection, refraction, reflection all validated
-2. **Wavelength shifting**: Beer-Lambert absorption correctly implemented
-3. **Dichroic optics**: Wavelength-dependent reflectance working as expected
-4. **Statistical consistency**: Results are reproducible with fixed random seeds
-5. **Physical intuition**: Solid angle dominates efficiency (as expected)
-
-#### ⚠️ **Model Limitations:**
-
-1. **No Fresnel reflections**: At optical interfaces, we don't apply Fresnel coefficients
-   - **Impact**: May overestimate transmission at high-angle interfaces
-   - **Justification**: For this geometry, most rays are near-normal incidence
-   - **Future work**: Add Fresnel option for oblique-angle geometries
-
-2. **Simplified sensor model**: Point sensors with radius threshold
-   - **Impact**: Doesn't model sensor angular acceptance or surface reflections
-   - **Justification**: Adequate for efficiency estimates
-   - **Future work**: Add realistic sensor geometry and quantum efficiency
-
-3. **No scattering**: Rayleigh/Mie scattering not included
-   - **Impact**: May overestimate transmission in long paths through LAr
-   - **Justification**: LAr is very transparent; scattering length >> detector size
-   - **Validity**: Good assumption for scales < 1 m
-
-4. **No polarization**: Dichroic reflectance averaged over polarization
-   - **Impact**: May miss polarization-dependent effects at Brewster's angle
-   - **Justification**: For unpolarized scintillation light, average is appropriate
-   - **Future work**: Add Stokes vector tracking if needed
-
-5. **Classical ray optics**: No wave effects (diffraction, interference)
-   - **Impact**: Not valid for features < wavelength
-   - **Justification**: All geometries >> 128 nm, so ray optics is valid
-   - **Validity**: Excellent for these length scales
-
-#### 🎯 **Appropriate Use Cases:**
-
-✅ **Well-suited for:**
-- Detector geometry optimization
-- Comparative studies (A vs B design)
-- Wavelength shifting efficiency studies
-- Material property sensitivity analysis
-- Educational demonstrations
-
-❌ **Not appropriate for:**
-- Sub-wavelength optical structures
-- High-precision absolute efficiency (need Fresnel corrections)
-- Detailed sensor response modeling
-- Coherent optical effects
-
----
-
-### Validation Methodology
-
-All comparisons use:
-- **Same random seed** (42) for fair comparison
-- **Same photon counts** (2,000 target, 20,000 max thrown)
-- **Same geometry** (only varying tested parameter)
-- **Independent runs** to avoid correlation
-
-This ensures differences reflect physics, not statistics.
-
-To reproduce: `python examples/physics_validation.py`
+🔬 **Reproduce validation**: `python examples/physics_validation.py`
 
 ## Performance
 
