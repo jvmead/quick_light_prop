@@ -63,7 +63,7 @@ def main():
 
     # Bulk LAr
     bulk_min = np.array([x_pos, 0, 0])
-    bulk_max = np.array([bulk_x, height, width])
+    bulk_max = np.array([x_pos + bulk_x, height, width])
 
     # Source at far end of bulk
     source_position = np.array([bulk_max[0], height/2, width/2])
