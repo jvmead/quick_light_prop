@@ -147,7 +147,7 @@ def create_geometry(
     return volumes, source_position, sensor_positions
 
 
-def run_test(name: str, volumes, src, sens, n_photons=1000, max_thrown=20000):
+def run_test(name: str, volumes, src, sens, n_photons=10000, max_thrown=100000):
     """Run simulation and return results."""
     print(f"  Running: {name}...")
 

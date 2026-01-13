@@ -180,8 +180,8 @@ def main():
     print("\n2. Running photon simulation...")
 
     config = SimulationConfig(
-        num_photons=10000,
-        max_thrown=100000,
+        num_photons=50000,
+        max_thrown=500000,
         max_steps=5000,
         max_workers=8,
         initial_wavelength_nm=128.0,  # LAr scintillation

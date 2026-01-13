@@ -99,10 +99,10 @@ def main():
     plt.close()
 
     # Run quick simulation (fewer photons for speed)
-    print("  2/5 Running simulation (5000 photons)...")
+    print("  2/5 Running simulation (10000 photons)...")
     config = SimulationConfig(
-        num_photons=2000,
-        max_thrown=20000,
+        num_photons=10000,
+        max_thrown=100000,
         max_steps=5000,
         max_workers=8,
         initial_wavelength_nm=128.0,
